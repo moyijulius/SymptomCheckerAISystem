@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthInsight AI - Smart Symptom Analysis</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #2ecc71;
+            --light: #ecf0f1;
+            --dark: #1a252f;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark);
+            background-color: #f8f9fa;
+        }
+        
+        .navbar {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary) !important;
+        }
+        
+        .navbar-brand span {
+            color: var(--secondary);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            margin: 0 0.5rem;
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--secondary);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .hero-section {
+            min-height: 85vh;
+            background: linear-gradient(135deg, rgba(236, 240, 241, 0.95), rgba(189, 195, 199, 0.95));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-container {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-patterns {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            opacity: 0.3;
+            background-image: radial-gradient(var(--secondary) 1px, transparent 1px), 
+                             radial-gradient(var(--primary) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: var(--dark);
+            margin-bottom: 2rem;
+            max-width: 750px;
+        }
+        
+        .btn-custom-primary {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-custom-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-custom-secondary {
+            background-color: white;
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom-secondary:hover {
+            background-color: var(--secondary);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .feature-card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+            padding: 2.5rem 1.5rem;
+            border-bottom: 4px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-bottom: 4px solid var(--secondary);
+        }
+        
+        .feature-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--secondary);
+            font-size: 2.2rem;
+        }
+        
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .trust-section {
+            background-color: white;
+            padding: 5rem 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #777;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .trust-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .trust-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+        
+        .testimonial-card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            color: #555;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+        }
+        
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 1rem;
+        }
+        
+        .testimonial-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .testimonial-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .testimonial-title {
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        .floating-image {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .process-timeline {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 3rem;
+        }
+        
+        .process-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--secondary);
+            opacity: 0.3;
+        }
+        
+        .process-step {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+        
+        .process-step-num {
+            position: absolute;
+            left: -60px;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            z-index: 2;
+        }
+        
+        .process-text {
+            background-color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .footer {
+            background-color: var(--primary);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+        
+        .footer-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            text-decoration: none;
+        }
+        
+        .social-links a:hover {
+            background-color: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 991.98px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .feature-card {
+                margin-bottom: 2rem;
+            }
+        }
+        
+        @media (max-width: 767.98px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .process-timeline {
+                padding-left: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header/Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">AI<span>Symptom</span>Checker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#testimonials">Testimonials</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#developers">Developers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-custom-primary" href="/register">Sign Up</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section d-flex align-items-center">
+        <div class="hero-patterns"></div>
+        <div class="container hero-container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <h1 class="hero-title animate__animated animate__fadeInUp">
+                        AI-Powered Health Symptom Analysis
+                    </h1>
+                    <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">
+                        AISymptomChecker uses advanced machine learning to analyze your symptoms, 
+                        providing personalized health insights, recommendations, and precautions 
+                        delivered securely to your email or phone.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 animate__animated animate__fadeInUp animate__delay-2s">
+                        <a href="/register" class="btn btn-custom-primary">Get Started</a>
+                        <a href="#how-it-works" class="btn btn-custom-secondary">Learn More</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="/static/dash.png" alt="Health Analysis Dashboard" class="img-fluid rounded-4 shadow-lg floating-image animate__animated animate__fadeIn animate__delay-1s" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5" id="features">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title" data-aos="fade-up">Why Choose AISymptomChecker?</h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    Our powerful AI system offers comprehensive health insights with these key features
+                </p>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-4" data-aos="fade-up">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-activity"></i>
+                        </div>
+                        <h3 class="feature-title">Smart Symptom Analysis</h3>
+                        <p>Our AI algorithms analyze your symptoms against a vast database of medical knowledge to provide potential health insights.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-clipboard2-pulse"></i>
+                        </div>
+                        <h3 class="feature-title">Comprehensive Reports</h3>
+                        <p>Receive detailed health reports with descriptions, recommended medications, precautions, diet plans, and workout suggestions.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h3 class="feature-title">Private & Secure</h3>
+                        <p>Your health data is encrypted and protected. We prioritize your privacy with secure data handling and storage.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-phone"></i>
+                        </div>
+                        <h3 class="feature-title">SMS Notifications</h3>
+                        <p>Get your health insights delivered directly to your phone via SMS for quick access anywhere, anytime.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-envelope-paper"></i>
+                        </div>
+                        <h3 class="feature-title">Email Reports</h3>
+                        <p>Receive comprehensive health reports to your email with detailed information and recommendations.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-lightning-charge"></i>
+                        </div>
+                        <h3 class="feature-title">Fast & Accurate</h3>
+                        <p>Get health insights within seconds. Our continuously improving AI provides increasingly accurate analysis.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Indicators Section -->
+    <section class="trust-section" id="about">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title" data-aos="fade-up">Trusted Health Insights</h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    We prioritize accuracy, security, and user privacy while providing valuable health information
+                </p>
+            </div>
+            <div class="row">
+                <div class="col-md-3" data-aos="fade-up">
+                    <div class="trust-badge text-center">
+                        <i class="bi bi-database-lock trust-icon"></i>
+                        <h4>Secure Data</h4>
+                        <p>End-to-end encryption for all your health information</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="trust-badge text-center">
+                        <i class="bi bi-journal-medical trust-icon"></i>
+                        <h4>Medical Database</h4>
+                        <p>Powered by extensive medical knowledge and research</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="trust-badge text-center">
+                        <i class="bi bi-graph-up-arrow trust-icon"></i>
+                        <h4>Continuous Learning</h4>
+                        <p>Our AI improves accuracy with every analysis</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="trust-badge text-center">
+                        <i class="bi bi-heart-pulse trust-icon"></i>
+                        <h4>Health Focus</h4>
+                        <p>Designed to support your healthcare journey</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-5 align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0" data-aos="fade-right">
+                    <h3 class="mb-4">Important Health Disclaimer</h3>
+                    <p class="mb-4">
+                        HealthInsight AI is designed to provide general health information and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+                    </p>
+                    <p>
+                        Our AI analyzes symptoms based on patterns and medical data, but a proper diagnosis requires evaluation by healthcare professionals who can consider your complete medical history and perform necessary examinations.
+                    </p>
+                    <div class="d-flex align-items-center mt-4">
+                        <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
+                        <p class="mb-0">Use our insights as a starting point for health discussions with your doctor</p>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <img src="/static/doctor.png" alt="Doctor and Patient" class="img-fluid rounded-4 shadow" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-5 bg-light" id="how-it-works">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title" data-aos="fade-up">How It Works</h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    Our simple four-step process provides you with valuable health insights in minutes
+                </p>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0" data-aos="fade-right">
+                    <div class="process-timeline">
+                        <div class="process-step">
+                            <div class="process-step-num">1</div>
+                            <div class="process-text">
+                                <h4>Create an Account</h4>
+                                <p>Sign up for a free account to get started with our symptom checker.</p>
+                            </div>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-num">2</div>
+                            <div class="process-text">
+                                <h4>Enter Your Symptoms</h4>
+                                <p>Describe your symptoms in detail using our user-friendly interface.</p>
+                            </div>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-num">3</div>
+                            <div class="process-text">
+                                <h4>Get AI Analysis</h4>
+                                <p>Our advanced algorithms analyze your symptoms and generate potential insights.</p>
+                            </div>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-num">4</div>
+                            <div class="process-text">
+                                <h4>Receive Your Report</h4>
+                                <p>Get your comprehensive health report via email or SMS with recommendations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center" data-aos="fade-left">
+                    <img src="/api/placeholder/540/540" alt="Health Analysis Process" class="img-fluid rounded-4 shadow-lg" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-5" id="testimonials">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title" data-aos="fade-up">What Our Users Say</h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    Real experiences from people who have benefited from our AI health insights
+                </p>
+            </div>
+            <div class="row">
+                <div class="col-md-4" data-aos="fade-up">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "AISymptomChecker gave me valuable information about my symptoms which helped me have a more informed conversation with my doctor. The diet recommendations were particularly helpful!"
+                        </div>
+                        <div class="testimonial-author">
+                            <img src="/static/user3.jpg" class="testimonial-avatar" alt="Sarah J.">
+                            <div class="testimonial-info">
+                                <div class="testimonial-name">Sarah J.</div>
+                                <div class="testimonial-title">Healthcare Professional</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "I was concerned about some unusual symptoms and the analysis gave me peace of mind while waiting for my doctor's appointment. The email report was comprehensive and easy to understand."
+                        </div>
+                        <div class="testimonial-author">
+                            <img src="/static/user2.jpg" class="testimonial-avatar" alt="Michael T.">
+                            <div class="testimonial-info">
+                                <div class="testimonial-name">Michael T.</div>
+                                <div class="testimonial-title">Software Engineer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "The SMS notification feature is perfect for when I'm on the go. I appreciate how detailed the exercise and diet recommendations are based on my specific health concerns."
+                        </div>
+                        <div class="testimonial-author">
+                            <img src="/static/user1.jpg." class="testimonial-avatar" alt="Lisa M.">
+                            <div class="testimonial-info">
+                                <div class="testimonial-name">Lisa M.</div>
+                                <div class="testimonial-title">Fitness Instructor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Developers Section -->
+    <section class="py-5 bg-light" id="developers">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title" data-aos="fade-up">Meet Our Developers</h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    The talented team behind HealthInsight AI's development and innovation
+                </p>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up">
+                    <div class="card border-0 shadow-sm h-100">
+                        <img src="static/developer2.png" class="card-img-top" alt="Developer 1">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Dr. James Wilson</h5>
+                            <p class="card-text text-muted">Lead AI Engineer</p>
+                            <p class="card-text">Specializes in machine learning algorithms for healthcare applications.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card border-0 shadow-sm h-100">
+                        <img src="static/developer1.png" class="card-img-top" alt="Developer 2">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Dr. Fedrick</h5>
+                            <p class="card-text text-muted">Medical Advisor</p>
+                            <p class="card-text">Board-certified physician ensuring medical accuracy of our system.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card border-0 shadow-sm h-100">
+                        <img src="/static/developer.png" class="card-img-top" alt="Developer 3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Michael Johnson</h5>
+                            <p class="card-text text-muted">Full Stack Developer</p>
+                            <p class="card-text">Crafting the secure and intuitive web interface for our health platform.</p>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+        </section>
+    
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-4 mb-4 mb-lg-0">
+                        <h4 class="footer-title">AISymptomChecker</h4>
+                        <p class="text-muted">Empowering individuals with AI-driven health insights for better decision-making and improved well-being.</p>
+                        <div class="social-links mt-4">
+                            <a href="#"><i class="bi bi-facebook"></i></a>
+                            <a href="#"><i class="bi bi-twitter"></i></a>
+                            <a href="#"><i class="bi bi-linkedin"></i></a>
+                            <a href="#"><i class="bi bi-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
+                        <h4 class="footer-title">Quick Links</h4>
+                        <ul class="footer-links">
+                            <li><a href="#">Home</a></li>
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#how-it-works">How It Works</a></li>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#testimonials">Testimonials</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
+                        <h4 class="footer-title">Resources</h4>
+                        <ul class="footer-links">
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">FAQs</a></li>
+                            <li><a href="#">Support</a></li>
+                            <li><a href="#">Blog</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-4">
+                        <h4 class="footer-title">Contact Us</h4>
+                        <p class="text-muted">Have questions or need assistance? Reach out to our team.</p>
+                        <ul class="footer-links">
+                            <li><i class="bi bi-envelope me-2"></i>support@aisymptomchecker.com</li>
+                            <li><i class="bi bi-phone me-2"></i>O706349937</li>
+                            <li><i class="bi bi-geo-alt me-2"></i>Kapenguria 024 Lotodo Street</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-5">
+                    <div class="col-12 text-center">
+                        <p class="copyright">&copy; 2023 AISymptomChecker. All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- AOS (Animate On Scroll) -->
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script>
+            AOS.init({
+                duration: 1000,
+                once: true
+            });
+        </script>
+    </body>
+    </html>

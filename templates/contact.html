@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - AI-Based Symptom Checker</title>
+    <link rel="stylesheet" href="styles.css">
+
+<style>
+/* General body and layout */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7fc;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Container styling */
+.container {
+    width: 90%;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Header styling */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    color: #3a5a99;
+    margin: 0;
+}
+
+/* Contact Form Styling */
+#contact-form {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#contact-form h2 {
+    font-size: 2rem;
+    color: #3a5a99;
+    margin-bottom: 20px;
+}
+
+#contact-form p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #3a5a99;
+    outline: none;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.submit-btn {
+    background-color: #3a5a99;
+    color: white;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #1e3c72;
+}
+
+/* Contact Information Styling */
+#contact-info {
+    margin-top: 40px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+    
+
+#contact-info h2 {
+    font-size: 1.8rem;
+    color: #3a5a99;
+    margin-bottom: 15px;
+}
+
+#contact-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#contact-info ul li {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+#contact-info ul li a {
+    color: #3a5a99;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+#contact-info ul li a:hover {
+    color: #1e3c72;
+}
+
+/* Social Media Links Styling */
+.social-links {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+.social-links li {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.social-links li a {
+    color: #3a5a99;
+    font-size: 1.2rem;
+    text-decoration: none;
+}
+
+.social-links li a:hover {
+    color: #1e3c72;
+}
+
+/* Footer styling */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f4f7fc;
+    margin-top: 40px;
+    border-radius: 0 0 8px 8px;
+}
+
+footer p {
+    color: #888;
+    font-size: 1rem;
+}
+.sec1{
+    text-align: center;
+}
+.touch{
+    color: #3a5a99;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    #contact-form {
+        padding: 20px;
+    }
+
+    #contact-form h2 {
+        font-size: 1.6rem;
+    }
+
+    #contact-info h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        font-size: 1rem;
+    }
+
+    .submit-btn {
+        font-size: 1rem;
+        padding: 12px;
+    }
+}
+
+</style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Contact Us</h1>
+        </header>
+        <section class="sec1">
+            <h2 class="touch">Get in Touch</h2>
+            <p>If you have any questions or feedback, feel free to send us a message.</p>
+        </section>
+        
+        <!-- Contact Form Section -->
+        <section id="contact-form">
+        
+            <form action="/submit_form" method="POST" id="contactForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Your Name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Your Email">
+                </div>
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" required placeholder="Subject">
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required placeholder="Your Message" rows="5"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+        </section>
+
+        <!-- Contact Information Section -->
+        <section id="contact-info">
+            <h2>Our Contact Information</h2>
+            <ul>
+                <li>Email: <a href="mailto:moyijulius17@gmail.com.com">moyijulius17@gmail.com</a></li>
+                <li>Phone: +254706369937</li>
+                <li>Location: Mayatta, Embu, Kenya</li>
+            </ul>
+
+            <!-- Links to Social Media Profiles -->
+            <h3>Follow Us</h3>
+            <ul class="social-links">
+                <li><a href="https://www.linkedin.com/in/your-profile" target="_blank">LinkedIn</a></li>
+                <li><a href="https://github.com/your-profile" target="_blank">GitHub</a></li>
+                <li><a href="https://twitter.com/your-profile" target="_blank">Twitter</a></li>
+            </ul>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2025 AI-Based Symptom Checker. All Rights Reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

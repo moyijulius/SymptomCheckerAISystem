@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based Symptom Checker - Login</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0069d9;
+            --secondary-text: #6c757d;
+            --light-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+        
+        .login-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 0 1rem;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1.5rem 1.5rem 0.5rem;
+        }
+        
+        .card-body {
+            padding: 2rem;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.25rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 123,255, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.75rem;
+            font-weight: 600;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 1.5rem;
+        }
+        
+        .forgot-password a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        
+        .signup-prompt {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--secondary-text);
+        }
+        
+        .signup-prompt a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .title {
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--secondary-text);
+            margin-bottom: 1.5rem;
+        }
+        
+        .error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .alert {
+            border-radius: 5px;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1.5rem;
+            animation: fadeOut 0.5s ease-in-out 3s forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .app-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .app-logo img {
+            height: 60px;
+            width: auto;
+        }
+        
+        /* Icon styling */
+        .input-group {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            top: 0.75rem;
+            left: 1rem;
+            color: var(--secondary-text);
+            z-index: 10;
+        }
+        
+        .input-with-icon {
+            padding-left: 2.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- App Logo placeholder - replace with your actual logo -->
+        <div class="app-logo">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#007bff" fill-opacity="0.1"/>
+                <circle cx="30" cy="30" r="20" fill="#007bff" fill-opacity="0.3"/>
+                <circle cx="30" cy="30" r="10" fill="#007bff"/>
+            </svg>
+        </div>
+        
+        <div class="card">
+            <div class="card-header text-center">
+                <h2 class="title">Welcome Back</h2>
+                <p class="subtitle">Sign in to access your health data</p>
+            </div>
+            
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div id="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <form id="loginForm" method="POST" action="/login">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="input-group mb-3">
+                        <span class="input-icon">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        <input type="email" class="form-control input-with-icon" name="email" id="email" placeholder="Email address" required>
+                    </div>
+                    <div id="emailError" class="error"></div>
+                    
+                    <div class="input-group mb-3">
+                        <span class="input-icon">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password" class="form-control input-with-icon" name="password" id="password" placeholder="Password" required>
+                    </div>
+                    <div id="error" class="error"></div>
+                    
+                    <div class="forgot-password">
+                        <a href="/forgot_password" id="forgot-link">Forgot password?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Log In</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="signup-prompt">
+            <span>Don't have an account?</span> <a href="/register" id="register-link">Sign Up</a>
+        </div>
+    </div>
+    
+    <script>
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            let valid = true;
+
+            const email = document.getElementById('email');
+            const emailError = document.getElementById('emailError');
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailPattern.test(email.value.trim())) {
+                emailError.textContent = "Please enter a valid email address";
+                valid = false;
+            } else {
+                emailError.textContent = "";
+            }
+
+            const password = document.getElementById('password');
+            const passwordError = document.getElementById('error');
+
+            if (password.value.trim().length < 6) {
+                passwordError.textContent = "Password must be at least 6 characters";
+                valid = false;
+            } else {
+                passwordError.textContent = "";
+            }
+
+            if (valid) {
+                loginForm.submit();
+            }
+        });
+        
+        // Auto-dismiss flash messages
+        document.addEventListener("DOMContentLoaded", function() {
+            let flashMessages = document.querySelectorAll(".alert");
+            
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    const alert = bootstrap.Alert.getOrCreateInstance(message);
+                    alert.close();
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>

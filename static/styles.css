@@ -1,0 +1,198 @@
+
+/* General body styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: rgb(168, 140, 140);
+  
+}
+
+/** Logo styling **/
+.shape {
+    border-radius: 5px;
+}
+
+/** Header **/
+h1 {
+    text-align: center;
+    color: #0056b3;
+}
+
+/** Navigation Links **/
+.navbar-nav {
+    display: flex;
+    flex-direction: row; /* Horizontal layout for larger screens */
+    gap: 15px; /* Add space between nav links */
+}
+
+li a:hover {
+    border-bottom: 1px solid black;
+    padding: 5px;
+}
+
+@media (max-width: 600px) {
+    .navbar-nav {
+        flex-direction: column; /* Stack links vertically on smaller screens */
+        align-items: flex-start;
+    }
+    li a:hover {
+        display: none;
+    }
+}
+/*******Search bar******/
+.search-bar{
+    display: flex;
+    justify-content: right;
+    margin-top: 10px;
+    margin-right: 10px;
+
+}
+#search{
+    
+  
+    border-radius: 0 0 2px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: rgb(233, 240, 240);
+    text-align: center;
+}
+#submit{
+  
+    font-family: sans-serif;
+    font-size: 13px;
+}
+
+/** Form styling **/
+form {
+    max-width: 80%;
+    margin: 0 auto;
+    padding: 70px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    margin-bottom: 15px;
+}
+
+/** Button styling **/
+button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+    background-color: #004494;
+    transform: scale(1.05);
+}
+
+.predict {
+    width: 100%;
+}
+
+/** Floating buttons container **/
+.floating-buttons-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Allows buttons to wrap to the next line if needed */
+    gap: 15px; /* Spacing between buttons */
+    margin-top: 20px;
+}
+
+.floating-buttons-container button {
+    min-width: 120px;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .floating-buttons-container button {
+        width: 100%; /* Stack buttons vertically on smaller screens */
+        margin-bottom: 10px;
+    }
+
+}
+
+/** Toast notification **/
+.toast{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    min-width: 300px;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #ff6b6b; /* Error color */
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast .toast-close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+}
+
+#sendResultsBtn{
+    margin-right: 100px;
+}
+/***Spinner styling*****/
+
+#spinner-overlay {
+    transition: opacity 0.3s ease;
+}
+
+.spinner-container {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 30px;
+    border-radius: 10px;
+}
+
+/* Testimonials and How It Works Section */
+.testimonials-and-how-it-works {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+.testimonials-and-how-it-works h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+.testimonials-and-how-it-works .card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+}
+
+.testimonials-and-how-it-works .card:hover {
+    transform: translateY(-10px);
+    box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+.rating {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
