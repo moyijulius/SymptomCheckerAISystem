@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, IntegerField, SelectField, SubmitField
+from wtforms import StringField, PasswordField, IntegerField, SelectField, SubmitField,HiddenField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, Optional, NumberRange, Regexp
 
 class RegistrationForm(FlaskForm):
@@ -40,6 +40,7 @@ class RegistrationForm(FlaskForm):
         ('non-binary', 'Non-Binary'),
         ('prefer_not_to_say', 'Prefer not to say')
     ], validators=[Optional()])
+    role = HiddenField('Role', default='user')
     
     submit = SubmitField('Register')
 
@@ -55,3 +56,9 @@ class LoginForm(FlaskForm):
     ])
     
     submit = SubmitField('Login')
+#Form for admin registration
+class AdminRegistrationForm(RegistrationForm):
+    role = SelectField('Role', choices=[
+        ('user', 'Regular User'),
+        ('admin', 'Administrator')
+    ], default='user')

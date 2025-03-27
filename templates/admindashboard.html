@@ -1,0 +1,39 @@
+{% extends "base_admin.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Admin Dashboard</h2>
+    
+    <div class="row mt-4">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">User Management</h5>
+                    <p class="card-text">Manage all system users and their permissions.</p>
+                    <a href="{{ url_for('user_management') }}" class="btn btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Reports</h5>
+                    <p class="card-text">View system usage reports and analytics.</p>
+                    <a href="{{ url_for('admin_reports') }}" class="btn btn-primary">View Reports</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Testimonials</h5>
+                    <p class="card-text">Manage user testimonials and reviews.</p>
+                    <a href="{{ url_for('admin_testimonials') }}" class="btn btn-primary">Manage Testimonials</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

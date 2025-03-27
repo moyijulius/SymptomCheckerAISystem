@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Your Report History</h2>
+    
+    <div class="table-responsive mt-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Disease</th>
+                    <th>Symptoms</th>
+                    <th>Sent Via</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ report.disease }}</td>
+                    <td>{{ report.symptoms }}</td>
+                    <td>
+                        {% if report.sent_via_email %}
+                        <span class="badge bg-primary">Email</span>
+                        {% endif %}
+                        {% if report.sent_via_sms %}
+                        <span class="badge bg-success">SMS</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" 
+                                data-bs-target="#reportModal{{ report.id }}">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+                
+                <!-- Report Detail Modal -->
+                <div class="modal fade" id="reportModal{{ report.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Report Details - {{ report.disease }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Symptoms:</h6>
+                                        <p>{{ report.symptoms }}</p>
+                                        
+                                        <h6 class="mt-3">Description:</h6>
+                                        <p>{{ report.description }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Medication:</h6>
+                                        <p>{{ report.medication }}</p>
+                                        
+                                        <h6 class="mt-3">Precautions:</h6>
+                                        <p>{{ report.precaution }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <h6>Diet:</h6>
+                                        <p>{{ report.diet }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Workout:</h6>
+                                        <p>{{ report.workout }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No reports found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

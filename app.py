@@ -12,27 +12,24 @@ from flask_migrate import Migrate
 from twilio.rest import Client
 from flask_mail import Mail, Message
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
+from functools import wraps
+from datetime import datetime
+from model import db, User, Testimonial
+from model import UserReport
+from flask import request, jsonify
+from model import db, UserReport
+import traceback 
+from sqlalchemy import func
+from werkzeug.utils import secure_filename
+import os
 
+#defining app
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Configure the SQLite database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Twilio configuration
-TWILIO_ACCOUNT_SID = 'Your Twilio SID' 
-TWILIO_AUTH_TOKEN = 'Your Twilio Token'   
-TWILIO_PHONE_NUMBER = 'Your Twilio Phone Number'
-
-#mail configuration
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'moyijulius17@gmail.com'
-app.config['MAIL_PASSWORD'] = 'fwyh bkbi qdtp twbb'     
-app.config['MAIL_DEFAULT_SENDER'] = 'moyijulius17@gmail.com'
-
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -48,14 +45,15 @@ def load_user(user_id):
 db.init_app(app)
 mail = Mail(app)
 migrate = Migrate(app, db)
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
+
+#endpoint for welcoming page for the system
 @app.route("/")
 def welcome():
     return render_template("welcome.html")
 
 
-#route for logging in
+#route for logging in the system
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -67,11 +65,15 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password_hash, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            session['email'] = user.email 
+            login_user(user)
+            session['user_id'] = user.id  
+            session['email'] = user.email  
             flash(f"Welcome, {user.username}!", "success")
-            return redirect(url_for('dashboard'))  # Changed from 'home' to 'dashboard'
+            
+            if user.is_admin():
+                return redirect(url_for('admin_dashboard'))
+            
+            return redirect(url_for('dashboard'))
         else:
             flash("Invalid email or password", "error")
             return redirect(url_for('login'))
@@ -111,13 +113,9 @@ def register():
 
 #Route to allow register user navigate to main home page
 @app.route("/dashboard")
-
+@login_required 
 def dashboard():
-    if 'user_id' not in session: 
-        flash("Please login to access the system.", "error")
-        return redirect(url_for('login')) 
     return render_template("index.html", symptoms=symptoms)
-
 
 #route to logout users
 @app.route('/logout')
@@ -227,187 +225,222 @@ def get_disease_details(disease):
     except Exception as e:
         return jsonify({"error": str(e)})
     
+#Admin Routes
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    if not current_user.is_admin():  # Note: should be is_admin() if it's a method
+        flash("You don't have permission to access this page", "error")
+        return redirect(url_for('login'))  # Redirect to regular dashboard
     
-#route send results via email
-def send_results():
-    if 'user_id' not in session:
-        return jsonify({"success": False, "message": "Please login to access this feature."})
+    users = User.query.filter(User.id != current_user.id).all()
+    current_year = datetime.now().year  
+    return render_template('base_admin.html', users=users)
+
+
+#admin various routes
+#user management routes
+@app.route('/admin/user-management')
+@login_required
+def user_management():
+    if not current_user.is_admin():
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        # Fetch all users except the current admin, ordered by id
+        users = User.query.filter(User.id != current_user.id).order_by(User.id).all()
+        return render_template('user_management.html', users=users)
+    except Exception as e:
+        app.logger.error(f"Error in user management: {str(e)}")
+        flash('An error occurred while loading user management.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+# Additional route for user deletion
+@app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Prevent deleting the current admin user
+        if user.id == current_user.id:
+            flash('You cannot delete your own account.', 'danger')
+            return redirect(url_for('user_management'))
+
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'User {user.username} has been deleted.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting user: {str(e)}")
+        flash('An error occurred while deleting the user.', 'danger')
+    
+    return redirect(url_for('user_management'))
+
+#Admin Reports routes
+@app.route('/admin/reports')
+@login_required
+def admin_reports():
+    # Check admin privileges
+    if not current_user.is_admin():
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('admin_dashboard'))
     
     try:
-        # Get data from the request
-        email = request.form.get("email")
-        disease = request.form.get("disease")
-        description = request.form.get("description")
-        medication = request.form.get("medication")
-        precaution = request.form.get("precaution")
-        diet = request.form.get("diet")
-        workout = request.form.get("workout")
+        # Fetch more comprehensive reports
+        total_users = User.query.count()
+        active_users = User.query.filter_by(is_active=True).count()
+        total_reports = UserReport.query.count()
+        recent_reports = UserReport.query.order_by(UserReport.created_at.desc()).limit(10).all()
         
-        # Creating  the email content
-        subject = f"Your Health Report for {disease}"
-        body = f"""
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; }}
-                .container {{ max-width: 600px; margin: auto; padding: 20px; }}
-                h1 {{ color: #2a5885; }}
-                h2 {{ color: #507299; margin-top: 20px; }}
-                p {{ line-height: 1.5; }}
-                .footer {{ margin-top: 30px; font-size: 0.8em; color: #777; }}
-                #dis{{color:red;}}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Your Health Report</h1>
-                <h2>Predicted Disease: <span id="dis">{disease}<span></h2>
-                
-                <h2>Description</h2>
-                <p>{description}</p>
-                
-                <h2>Recommended Medication</h2>
-                <p>{medication}</p>
-                
-                <h2>Precautions</h2>
-                <p>{precaution}</p>
-                
-                <h2>Recommended Diet</h2>
-                <p>{diet}</p>
-                
-                <h2>Recommended Workout</h2>
-                <p>{workout}</p>
-                
-                <div class="footer">
-                    <p>This health report is generated based on your symptoms by our AI system.</p>
-                    <p>Disclaimer: This is not medical advice. Please consult a healthcare professional for proper diagnosis and treatment.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        # Get disease distribution
+        disease_distribution = db.session.query(
+            UserReport.disease, 
+            db.func.count(UserReport.id).label('count')
+        ).group_by(UserReport.disease).order_by(db.desc('count')).all()
         
-        # Send the email
-        msg = Message(subject=subject, recipients=[email], html=body)
-        mail.send(msg)
-        
-        return jsonify({"success": True})
+        return render_template('reports.html', 
+                               total_users=total_users,
+                               active_users=active_users,
+                               total_reports=total_reports,
+                               recent_reports=recent_reports,
+                               disease_distribution=disease_distribution)
     except Exception as e:
-        print(f"Error sending email: {e}")
-        return jsonify({"success": False, "message": f"Error: {e}"})
-           
-# get email
-@app.route("/get-user-email", methods=["GET"])
-def get_user_email():
-    if 'email' in session:
-        return jsonify({"email": session['email']})
-    return jsonify({"email": ""})
+        # Import traceback to get more detailed error information
+        import traceback
+        print(traceback.format_exc())
+        app.logger.error(f"Error in reports: {str(e)}")
+        flash('An error occurred while generating reports.', 'danger')
+        return redirect(url_for('admin_dashboard'))
 
-#flash message for email sending
-@app.route("/set-flash-message", methods=["GET"])
-def set_flash_message():
-    message_type = request.args.get("type", "info") 
-    message = request.args.get("message", "")
-    
-    if message:
-        flash(message, message_type)
-    
-    return jsonify({"success": True})
+#admin main dashboard
+@app.route('/admindashboard', methods=['GET'])
+def mainadmin():
+    return render_template('admindashboard.html')
 
+# Testimonial routes to allow users send reviews
+@app.route('/testimonials', methods=['GET'])
+def testimonials():
+    return render_template('testimonials.html')
+
+#routes to send testimonials
+@app.route('/submit-testimonial', methods=['POST'])
+@login_required
+def submit_testimonial():
+    name = request.form.get('name')
+    content = request.form.get('content')
     
-  # Route to send results via SMS 
-@app.route('/api/send-sms', methods=['POST'])
-def send_sms():
+    if not name or not content:
+        flash('Please fill in all fields', 'error')
+        return redirect(url_for('testimonials'))
+    
+    testimonial = Testimonial(
+        user_id=current_user.id,
+        name=name,
+        content=content,
+        status='pending'
+    )
+    
+    db.session.add(testimonial)
+    db.session.commit()
+    
+    flash('Thank you for your testimonial! It will be reviewed by our team.', 'success')
+    return redirect(url_for('testimonials'))
+
+# Admin testimonial management
+@app.route('/admin/testimonials')
+@login_required
+def admin_testimonials():
+    status = request.args.get('status', 'pending')
+    testimonials = Testimonial.query.filter_by(status=status).all()
+    return render_template('admin_testimonials.html', 
+                         testimonials=testimonials,
+                         status=status)
+#routes to allow admin aprove
+@app.route('/admin/testimonial/<int:testimonial_id>/approve', methods=['POST'])
+@login_required
+def approve_testimonial(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    testimonial.status = 'approved'
+    testimonial.admin_notes = request.form.get('notes', '')
+    db.session.commit()
+    flash('Testimonial approved successfully', 'success')
+    return redirect(url_for('admin_testimonials'))
+
+# route to allow admin reject testimonials
+@app.route('/admin/testimonial/<int:testimonial_id>/reject', methods=['POST'])
+@login_required
+def reject_testimonial(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    testimonial.status = 'rejected'
+    testimonial.admin_notes = request.form.get('notes', '')
+    db.session.commit()
+    flash('Testimonial rejected', 'info')
+    return redirect(url_for('admin_testimonials'))
+
+#routes to load profile of user
+@app.route('/profile')
+@login_required
+def profile():
     try:
-        start_time = time.time()
-        data = request.get_json()
+        return render_template('profile.html', user=current_user)
+    except Exception as e:
+        app.logger.error(f"Error in profile: {str(e)}")
+        flash('An error occurred while loading profile.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+    
+#routes for setting
+@app.route('/settings')
+@login_required
+def settings():
+    try:
+        return render_template('settings.html')
+    except Exception as e:
+        app.logger.error(f"Error in settings: {str(e)}")
+        flash('An error occurred while loading settings.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+    
+#save user report in database
+@app.route('/save-report', methods=['POST'])
+@login_required
+def save_report():
+    try:
+        report_data = request.get_json()
         
-        if not data:
-            app.logger.error("No JSON data provided")
-            return jsonify({'success': False, 'message': 'No JSON data provided'}), 400
+        new_report = UserReport(
+            user_id=current_user.id,
+            disease=report_data.get('disease', ''),
+            symptoms=report_data.get('symptoms', ''), 
+            description=report_data.get('description', ''),
+            medication=report_data.get('medication', ''),
+            precaution=report_data.get('precaution', ''),
+            diet=report_data.get('diet', ''),
+            workout=report_data.get('workout', '')
+        )
         
-        phone_number = data.get('phoneNumber')
-        report_data = data.get('data', {})
+        db.session.add(new_report)
+        db.session.commit()
         
-        if not phone_number:
-            app.logger.error("Phone number is required")
-            return jsonify({'success': False, 'message': 'Phone number is required'}), 400
-        
-        if not phone_number.startswith('+'):
-            phone_number = '+' + phone_number.lstrip('0')
-        
-        disease = report_data.get('disease', 'Not specified')
-        precaution = summarize_text(report_data.get('precaution', ''), 100)
-        medication = summarize_text(report_data.get('medication', ''), 100)
-        
-        sms_message = (f"Your Health Report Summary:\n\n"
-                     f"Condition: {disease}\n"
-                     f"Key Precautions: {precaution}\n"
-                     f"Medication: {medication}\n\n"
-                     f"Please check your patient portal for the full report.")
-        
-        app.logger.info(f"Sending SMS to {phone_number}: {sms_message}")
-        
-        # Log the time taken before sending the SMS
-        pre_sms_time = time.time()
-        app.logger.info(f"Time taken before sending SMS: {pre_sms_time - start_time} seconds")
-        
-        try:
-            # Send SMS via Twilio
-            message = twilio_client.messages.create(
-                body=sms_message,
-                from_=TWILIO_PHONE_NUMBER,
-                to=phone_number
-            )
-            
-            # Log the time taken after sending the SMS
-            post_sms_time = time.time()
-            app.logger.info(f"Time taken to send SMS: {post_sms_time - pre_sms_time} seconds")
-            
-            app.logger.info(f'SMS sent successfully with SID: {message.sid}')
-            return jsonify({'success': True, 'message': 'Health report summary sent to your phone'})
-        
-        except Exception as twilio_error:
-            app.logger.error(f'Twilio error: {str(twilio_error)}')
-            # Check if it's the specific geographic permissions error
-            if "21612" in str(twilio_error):
-                return jsonify({
-                    'success': False, 
-                    'message': 'Your phone number cannot receive messages from our system. This may be due to geographic restrictions or carrier limitations.'
-                }), 400
-            else:
-                return jsonify({'success': False, 'message': f'Failed to send SMS: {str(twilio_error)}'}), 400
+        return jsonify({'success': True, 'message': 'Report saved successfully'})
     
     except Exception as e:
-        app.logger.error(f'Error sending SMS: {str(e)}')
-        return jsonify({'success': False, 'message': f'Failed to send SMS: {str(e)}'}), 500
-
-
-# Get user phone number from the database
-@app.route("/get-user-phone", methods=["GET"])
-def get_user_phone():
-    print("Session:", session)  # Debugging: Print the session
-    if 'user_id' in session:
-        user = User.query.get(session['user_id'])
-        if user:
-            return jsonify({"phone_number": user.phone_number})
-    return jsonify({"phone_number": ""})
-
+        db.session.rollback()
+        app.logger.error(f"Error saving report: {str(e)}")
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'success': False, 'message': str(e)}), 500
     
-#helper
-def summarize_text(text, max_length):
-    if not text:
-        return "None provided"
-    if len(text) <= max_length:
-        return text
-    return text[:max_length] + "..."
 #update profile
 @app.route('/update_profile', methods=['POST'])
 def update_profile():
     if 'user_id' not in session:
         return jsonify({'message': 'User not logged in!'}), 401
     
-    user_id = session['user_id']  # Get the user_id from session
+    user_id = session['user_id']  
     user = User.query.get(user_id)
     
     if user:
@@ -426,6 +459,14 @@ def update_profile():
         return jsonify({'message': 'Profile updated successfully!'}), 200
     else:
         return jsonify({'message': 'User not found!'}), 404
+    
+#Reports
+@app.route("/report-history")
+@login_required
+def report_history():
+    reports = UserReport.query.filter_by(user_id=current_user.id).order_by(UserReport.created_at.desc()).all()
+    return render_template("report_history.html", reports=reports)
+
 #populate the profile with data
 @app.route('/get_profile_data')
 def get_profile_data():
@@ -458,6 +499,69 @@ def contact():
 @app.route('/developer')
 def developer():
     return render_template("developer.html")
+#dashboard refereshing
+@app.route('/admin_dashboard1')
+def admin_dashboard1():
+    # Calculate user role counts
+    admin_count = User.query.filter_by(role='admin').count()
+    regular_count = User.query.filter_by(role='regular').count()
+    restricted_count = User.query.filter_by(role='restricted').count()
+
+    return render_template('admin_dashboard.html', 
+        admin_count=admin_count,
+        regular_count=regular_count,
+        restricted_count=restricted_count
+    )
+#refreshing
+@app.route('/refresh_dashboard')
+def refresh_dashboard():
+    # Example refresh logic
+    return jsonify({
+        'user_roles': {
+            'admin': User.query.filter_by(role='admin').count(),
+            'regular': User.query.filter_by(role='regular').count(),
+            'restricted': User.query.filter_by(role='restricted').count()
+        }
+    })
+#user details by admin
+@app.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        # Update user details
+        user.username = request.form['username']
+        user.email = request.form['email']
+        user.full_name = request.form.get('full_name')
+        user.phone_number = request.form.get('phone_number')
+        user.role = request.form.get('role')
+        user.is_active = 'is_active' in request.form
+
+        # Handle profile picture upload
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                user.profile_picture = file_path
+
+        try:
+            db.session.commit()
+            flash('User updated successfully', 'success')
+            return redirect(url_for('view_user', user_id=user.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating user: {str(e)}', 'danger')
+
+    return render_template('edit_user.html', user=user)
+
+@app.route('/users/view/<int:user_id>')
+@login_required
+def view_user(user_id):
+    user = User.query.get_or_404(user_id)
+    return render_template('view_user.html', user=user)
 
 
 

@@ -1,0 +1,90 @@
+<!-- templates/admin_testimonials.html -->
+{% extends "base_admin.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Testimonial Management</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link text-dark border-primary {% if status == 'pending' %}active bg-light{% endif %}" 
+                       href="{{ url_for('admin_testimonials', status='pending') }}">
+                        Pending
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark border-primary {% if status == 'approved' %}active bg-light{% endif %}" 
+                       href="{{ url_for('admin_testimonials', status='approved') }}">
+                        Approved
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark border-primary {% if status == 'rejected' %}active bg-light{% endif %}" 
+                       href="{{ url_for('admin_testimonials', status='rejected') }}">
+                        Rejected
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        
+        <div class="card-body">
+            {% if testimonials %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Content</th>
+                            <th>User</th>
+                            <th>Date</th>
+                            {% if status == 'pending' %}
+                            <th>Actions</th>
+                            {% else %}
+                            <th>Admin Notes</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for testimonial in testimonials %}
+                        <tr>
+                            <td>{{ testimonial.id }}</td>
+                            <td>{{ testimonial.name }}</td>
+                            <td>{{ testimonial.content }}</td>
+                            <td>{{ testimonial.user.username }}</td>
+                            <td>{{ testimonial.created_at.strftime('%Y-%m-%d') }}</td>
+                            {% if status == 'pending' %}
+                            <td>
+                                <form method="POST" action="{{ url_for('approve_testimonial', testimonial_id=testimonial.id) }}" style="display: inline;">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="notes" placeholder="Notes (optional)">
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm ">Approve</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('reject_testimonial', testimonial_id=testimonial.id) }}" style="display: inline;">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="notes" placeholder="Reason for rejection">
+                                    </div>
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            </td>
+                            {% else %}
+                            <td>{{ testimonial.admin_notes }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No {{ status }} testimonials found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

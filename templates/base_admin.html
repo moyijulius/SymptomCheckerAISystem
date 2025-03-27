@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>{% block title %}Admin Panel{% endblock %} | Healthcare AI</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- In base_admin.html or base.html -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Custom Admin CSS -->
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --topbar-height: 60px;
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: -100%;
+            background: linear-gradient(180deg, var(--primary-color) 10%, #224abe 100%);
+            color: white;
+            transition: all 0.3s ease;
+            z-index: 1050;
+            overflow-y: auto;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        #sidebar.show {
+            left: 0;
+        }
+        
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 800;
+            padding: 1.5rem 1rem;
+            letter-spacing: 0.05rem;
+            color: white;
+        }
+        
+        .sidebar-brand:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .sidebar-brand-icon i {
+            font-size: 2rem;
+        }
+        
+        .sidebar-brand-text {
+            display: inline;
+            margin-left: 0.5rem;
+        }
+        
+        .sidebar-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 0 1rem 1rem;
+        }
+        
+        .sidebar-heading {
+            text-align: left;
+            padding: 0 1rem;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+        }
+        
+        .nav-item {
+            position: relative;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-radius: 0.35rem;
+            margin: 0 0.5rem;
+        }
+        
+        .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+        }
+        
+        .nav-link i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Topbar Styles */
+        #topbar {
+            height: var(--topbar-height);
+            background-color: white;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            transition: all 0.3s;
+        }
+        
+        .mobile-toggle {
+            background: none;
+            border: none;
+            color: var(--dark-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 1rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Main Content Styles */
+        #content-wrapper {
+            margin-top: var(--topbar-height);
+            transition: all 0.3s ease;
+            padding: 1.5rem;
+            min-height: calc(100vh - var(--topbar-height));
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Backdrop for mobile sidebar */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .sidebar-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Responsive Adjustments */
+        @media (min-width: 992px) {
+            #sidebar {
+                left: 0;
+            }
+            
+            #content-wrapper {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .mobile-toggle {
+                display: none;
+            }
+            
+            .sidebar-backdrop {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 991.98px) {
+            #topbar {
+                justify-content: space-between;
+            }
+            
+            .navbar-nav {
+                flex-direction: row;
+            }
+            
+            .nav-item.dropdown {
+                position: static;
+            }
+            
+            .dropdown-menu {
+                position: absolute;
+                right: 1rem;
+                left: auto;
+            }
+        }
+        
+        /* Dropdown Styling */
+        .dropdown-menu {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border: none;
+            border-radius: 0.35rem;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.5rem;
+            color: var(--secondary-color);
+        }
+        
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: #f8f9fa;
+        }
+        
+        /* Footer adjustments */
+        .sticky-footer {
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+        
+        /* Page content heading */
+        .page-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .page-heading {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+        
+        /* Improved alerts */
+        .alert {
+            border-radius: 0.35rem;
+            border-left: 0.25rem solid transparent;
+        }
+        
+        .alert-success {
+            border-left-color: var(--success-color);
+        }
+        
+        .alert-danger {
+            border-left-color: var(--danger-color);
+        }
+        
+        .alert-warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .alert-info {
+            border-left-color: var(--info-color);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body id="page-top">
+    <!-- Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <!-- Sidebar Brand -->
+            <a class="sidebar-brand" href="{{ url_for('admin_dashboard') }}">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Healthcare AI Admin</div>
+            </a>
+            
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+            
+            <!-- Sidebar Navigation -->
+            <ul class="nav flex-column">
+                <!-- Core Section -->
+                <div class="sidebar-heading">Core</div>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'mainadmin' %}active{% endif %}" href="{{ url_for('mainadmin') }}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'user_management' %}active{% endif %}" href="{{ url_for('user_management') }}">
+                        <i class="bi bi-people"></i>
+                        <span>User Management</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_reports' %}active{% endif %}" href="{{ url_for('admin_reports') }}">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_testimonials' %}active{% endif %}" href="{{ url_for('admin_testimonials') }}">
+                        <i class="bi bi-chat-square-quote"></i>
+                        <span>Testimonials</span>
+                    </a>
+                </li>
+                
+                <!-- Divider -->
+                <hr class="sidebar-divider">
+                
+                <!-- System Section -->
+                <div class="sidebar-heading">System</div>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('mainadmin') }}">
+                        <i class="bi bi-arrow-left-circle"></i>
+                        <span>Back to Main App</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- End of Sidebar -->
+        
+        <!-- Content Wrapper -->
+        <div id="content-wrapper">
+            <!-- Topbar -->
+            <nav id="topbar" class="navbar navbar-expand navbar-light bg-success shadow">
+                <!-- Mobile Sidebar Toggle -->
+                <button id="mobile-sidebar-toggle" class="mobile-toggle" aria-label="Toggle navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <!-- Topbar Navbar -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- Nav Item - User Information -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="me-2 d-none d-lg-inline text-gray-600 small">
+                                {{ current_user.username }}
+                            </span>
+                            <i class="bi bi-person-circle fs-4 text-gray-600"></i>
+                        </a>
+                        
+                        <!-- Dropdown Menu -->
+                        <ul class="dropdown-menu dropdown-menu-end shadow animated--grow-in" 
+                            aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    <i class="bi bi-person"></i>
+                                    Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('settings') }}">
+                                    <i class="bi bi-gear"></i>
+                                    Settings
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" 
+                                   data-bs-target="#logoutModal">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+            <!-- End of Topbar -->
+            
+            <!-- Begin Page Content -->
+            <div class="container-fluid">
+                <!-- Page Heading -->
+                <div class="page-heading mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">
+                        {% block page_heading %}{% endblock %}
+                    </h1>
+                    {% block page_actions %}{% endblock %}
+                </div>
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="row">
+                            <div class="col-12">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+            <!-- /.container-fluid -->
+            
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white mt-4">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; Healthcare AI {{ current_year }}</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+        </div>
+        <!-- End of Content Wrapper -->
+    </div>
+    <!-- End of Page Wrapper -->
+    
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">Ready to Leave?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Select "Logout" below if you are ready to end your current session.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+            const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+            const contentWrapper = document.getElementById('content-wrapper');
+            
+            // Function to handle sidebar state
+            function toggleSidebar() {
+                const isMobile = window.innerWidth < 992;
+                
+                if (isMobile) {
+                    sidebar.classList.toggle('show');
+                    sidebarBackdrop.classList.toggle('show');
+                    document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+                }
+            }
+            
+            // Mobile Sidebar Toggle
+            mobileSidebarToggle.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when backdrop is clicked
+            sidebarBackdrop.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when a nav link is clicked on mobile
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            
+            // Handle responsive behavior on window resize
+            function handleResize() {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.remove('show');
+                    sidebarBackdrop.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            // Add resize event listener
+            window.addEventListener('resize', handleResize);
+            
+            // Initialize sidebar state based on screen size
+            handleResize();
+            
+            // Add active class to current page link
+            const currentPath = window.location.pathname;
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
