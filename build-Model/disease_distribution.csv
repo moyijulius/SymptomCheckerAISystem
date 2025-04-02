@@ -1,0 +1,83 @@
+disease,count,dataset
+Fungal infection,120,Training
+Allergy,120,Training
+GERD,120,Training
+Chronic cholestasis,120,Training
+Drug Reaction,120,Training
+Peptic ulcer diseae,120,Training
+AIDS,120,Training
+Diabetes ,120,Training
+Gastroenteritis,120,Training
+Bronchial Asthma,120,Training
+Hypertension ,120,Training
+Migraine,120,Training
+Cervical spondylosis,120,Training
+Paralysis (brain hemorrhage),120,Training
+Jaundice,120,Training
+Malaria,120,Training
+Chicken pox,120,Training
+Dengue,120,Training
+Typhoid,120,Training
+hepatitis A,120,Training
+Hepatitis B,120,Training
+Hepatitis C,120,Training
+Hepatitis D,120,Training
+Hepatitis E,120,Training
+Alcoholic hepatitis,120,Training
+Tuberculosis,120,Training
+Common Cold,120,Training
+Pneumonia,120,Training
+Dimorphic hemmorhoids(piles),120,Training
+Heart attack,120,Training
+Varicose veins,120,Training
+Hypothyroidism,120,Training
+Hyperthyroidism,120,Training
+Hypoglycemia,120,Training
+Osteoarthristis,120,Training
+Arthritis,120,Training
+(vertigo) Paroymsal  Positional Vertigo,120,Training
+Acne,120,Training
+Urinary tract infection,120,Training
+Psoriasis,120,Training
+Impetigo,120,Training
+Fungal infection,2,Testing
+Allergy,1,Testing
+GERD,1,Testing
+Chronic cholestasis,1,Testing
+Drug Reaction,1,Testing
+Peptic ulcer diseae,1,Testing
+AIDS,1,Testing
+Diabetes ,1,Testing
+Gastroenteritis,1,Testing
+Bronchial Asthma,1,Testing
+Hypertension ,1,Testing
+Migraine,1,Testing
+Cervical spondylosis,1,Testing
+Paralysis (brain hemorrhage),1,Testing
+Jaundice,1,Testing
+Malaria,1,Testing
+Chicken pox,1,Testing
+Dengue,1,Testing
+Typhoid,1,Testing
+hepatitis A,1,Testing
+Hepatitis B,1,Testing
+Hepatitis C,1,Testing
+Hepatitis D,1,Testing
+Hepatitis E,1,Testing
+Alcoholic hepatitis,1,Testing
+Tuberculosis,1,Testing
+Common Cold,1,Testing
+Pneumonia,1,Testing
+Dimorphic hemmorhoids(piles),1,Testing
+Heart attack,1,Testing
+Varicose veins,1,Testing
+Hypothyroidism,1,Testing
+Hyperthyroidism,1,Testing
+Hypoglycemia,1,Testing
+Osteoarthristis,1,Testing
+Arthritis,1,Testing
+(vertigo) Paroymsal  Positional Vertigo,1,Testing
+Acne,1,Testing
+Urinary tract infection,1,Testing
+Psoriasis,1,Testing
+Impetigo,1,Testing

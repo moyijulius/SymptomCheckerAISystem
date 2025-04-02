@@ -431,7 +431,10 @@
                         <a class="nav-link" href="#about">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#testimonials">Testimonials</a>
+                        <a class="nav-link" href="{{ url_for('testimonials') }}">
+                            <i class="bi bi-chat-square-quote"></i>
+                            <span>Review</span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#developers">Developers</a>
@@ -585,7 +588,7 @@
                 <div class="col-lg-6 mb-5 mb-lg-0" data-aos="fade-right">
                     <h3 class="mb-4">Important Health Disclaimer</h3>
                     <p class="mb-4">
-                        HealthInsight AI is designed to provide general health information and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+                        AISymptomChecker is designed to provide general health information and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
                     </p>
                     <p>
                         Our AI analyzes symptoms based on patterns and medical data, but a proper diagnosis requires evaluation by healthcare professionals who can consider your complete medical history and perform necessary examinations.
@@ -645,7 +648,7 @@
                     </div>
                 </div>
                 <div class="col-lg-6 text-center" data-aos="fade-left">
-                    <img src="/api/placeholder/540/540" alt="Health Analysis Process" class="img-fluid rounded-4 shadow-lg" />
+                    <!--<img src="/api/placeholder/540/540" alt="Health Analysis Process" class="img-fluid rounded-4 shadow-lg" /> -->
                 </div>
             </div>
         </div>
@@ -713,7 +716,7 @@
             <div class="text-center mb-5">
                 <h2 class="section-title" data-aos="fade-up">Meet Our Developers</h2>
                 <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
-                    The talented team behind HealthInsight AI's development and innovation
+                    The talented team behind AISymptomChecker development and innovation
                 </p>
             </div>
             <div class="row justify-content-center">

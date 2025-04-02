@@ -61,12 +61,14 @@
                             {% if status == 'pending' %}
                             <td>
                                 <form method="POST" action="{{ url_for('approve_testimonial', testimonial_id=testimonial.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> 
                                     <div class="input-group mb-2">
                                         <input type="text" class="form-control" name="notes" placeholder="Notes (optional)">
                                     </div>
                                     <button type="submit" class="btn btn-success btn-sm ">Approve</button>
                                 </form>
                                 <form method="POST" action="{{ url_for('reject_testimonial', testimonial_id=testimonial.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="input-group mb-2">
                                         <input type="text" class="form-control" name="notes" placeholder="Reason for rejection">
                                     </div>

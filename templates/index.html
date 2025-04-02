@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>AI-Based Symptom Checker</title>
     <link rel="stylesheet" href="static/styles.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Toastify CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 </head>
 <body>
     <header class="bg-info border-bottom p-3">
@@ -235,21 +240,23 @@
             </div>
         </div>
     </div>
-    <!-- precaution Modal -->
     <div class="modal fade" id="precautionModal" tabindex="-1" aria-labelledby="precautionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="precautionModalLabel">Precaution</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Loading precaution details...</p>
-                    
-                </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="precautionModalLabel">Precautions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Loading precaution details...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
+
      <!-- Diets Modal -->
      <div class="modal fade" id="dietsModal" tabindex="-1" aria-labelledby="dietsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -561,51 +568,152 @@
         document.addEventListener('DOMContentLoaded', function() {
     const downloadReportBtn = document.getElementById('downloadReportBtn');
     
+    // Initialize Toastify with updated styling
+    const showToast = (message, type = 'success') => {
+        const background = type === 'success' ? '#4CAF50' : (type === 'info' ? '#3498db' : '#F44336');
+        Toastify({
+            text: message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: {
+                background: background,
+            },
+            stopOnFocus: true,
+            close: true,
+            className: "toastify-custom",
+        }).showToast();
+    };
+    
     downloadReportBtn.addEventListener('click', function() {
+        // Show loading toast
+        showToast("Generating your report...", "info");
+        
         // Improved data collection with error checking
+        const disease = document.getElementById('disease-result')?.textContent.trim() || '';
+        const description = document.getElementById('description-result')?.textContent.trim() || '';
+        const symptoms = document.getElementById('symptoms-input')?.value || '';
+        const medication = document.getElementById('medication-result')?.textContent.trim() || '';
+        
+        // For precautions, we need to handle the list format
+        let precaution = '';
+        const precautionEl = document.getElementById('precaution-result');
+        if (precautionEl) {
+            // Check if precautions are in list format
+            const listItems = precautionEl.querySelectorAll('li');
+            if (listItems.length > 0) {
+                // Convert list items to bullet points
+                precaution = Array.from(listItems)
+                    .map(item => `• ${item.textContent.trim()}`)
+                    .join('\n');
+            } else {
+                // Fallback to text content if no list items
+                precaution = precautionEl.textContent.trim();
+            }
+        }
+        
+        const diet = document.getElementById('diet-result')?.textContent.trim() || '';
+        const workout = document.getElementById('workout-result')?.textContent.trim() || '';
+        
+        // Get current date for the report
+        const currentDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
         const reportData = {
-            disease: document.getElementById('disease-result')?.textContent.trim() || '',
-            description: document.getElementById('description-result')?.textContent.trim() || '',
-            symptoms: document.getElementById('symptoms-input')?.value || '', // Add this
-            medication: document.getElementById('medication-result')?.textContent.trim() || '',
-            precaution: document.getElementById('precaution-result')?.textContent.trim() || '',
-            diet: document.getElementById('diet-result')?.textContent.trim() || '',
-            workout: document.getElementById('workout-result')?.textContent.trim() || ''
+            disease,
+            description,
+            symptoms,
+            medication,
+            precaution,
+            diet,
+            workout,
+            generatedDate: currentDate
         };
-
-        // Log the data being sent (for debugging)
-        console.log('Sending report data:', reportData);
-
+        
         // Generate PDF and save to database
         generateReportDownload(reportData);
     });
-
+    
     function generateReportDownload(reportData) {
-        // Basic PDF generation using html2pdf.js
+        // Create a professional PDF template
         const element = document.createElement('div');
+        element.style.padding = '20px';
+        element.style.fontFamily = 'Arial, sans-serif';
+        
+        // Format precautions for better display
+        const formattedPrecautions = reportData.precaution.replace(/• /g, '<br>• ');
+        
         element.innerHTML = `
-            <h1>Health Report</h1>
-            <h2>Disease: ${reportData.disease}</h2>
-            <h3>Description</h3>
-            <p>${reportData.description}</p>
-            <h3>Medication</h3>
-            <p>${reportData.medication}</p>
-            <h3>Precautions</h3>
-            <p>${reportData.precaution}</p>
-            <h3>Recommended Diet</h3>
-            <p>${reportData.diet}</p>
-            <h3>Recommended Workout</h3>
-            <p>${reportData.workout}</p>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="color: #2c3e50; margin-bottom: 5px;">Health Assessment Report</h1>
+                <p style="color: #7f8c8d; font-size: 14px;">Generated on ${reportData.generatedDate}</p>
+                <hr style="border: 1px solid #e0e0e0; margin: 15px 0;">
+            </div>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin-bottom: 20px;">
+                <h2 style="color: #3498db; margin-top: 0; margin-bottom: 10px;">Diagnosis</h2>
+                <p style="font-size: 18px; font-weight: bold;">${reportData.disease}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">Description</h3>
+                <p style="color: #34495e; line-height: 1.5;">${reportData.description}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">Recommended Medication</h3>
+                <p style="color: #34495e; line-height: 1.5;">${reportData.medication}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">Precautions</h3>
+                <p style="color: #34495e; line-height: 1.6;">${formattedPrecautions}</p>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+                <div style="flex: 1; min-width: 250px; background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h3 style="color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">Recommended Diet</h3>
+                    <p style="color: #34495e; line-height: 1.5;">${reportData.diet}</p>
+                </div>
+                
+                <div style="flex: 1; min-width: 250px; background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h3 style="color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">Recommended Workout</h3>
+                    <p style="color: #34495e; line-height: 1.5;">${reportData.workout}</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; border-top: 1px solid #e0e0e0; padding-top: 15px; font-size: 12px; color: #7f8c8d; text-align: center;">
+                <p>This report is generated based on the symptoms provided and is meant for informational purposes only.</p>
+                <p>Please consult with a healthcare professional for proper medical advice.</p>
+            </div>
         `;
         
-        // Requires html2pdf.js library
-        html2pdf().from(element).save('health-report.pdf');
+        // PDF options for better formatting
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `health-report-${Date.now()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
         
-        // Simultaneously send report to backend for database storage
-        sendReportToDatabase(reportData);
+        // Generate the PDF with progress tracking
+        html2pdf().from(element).set(opt).save().then(() => {
+            // Show success toast after PDF is generated
+            showToast("PDF report generated successfully!");
+            
+            // Save to database
+            sendReportToDatabase(reportData);
+        });
     }
-
+    
     function sendReportToDatabase(reportData) {
+        // Show saving toast
+        showToast("Saving your report...", "info");
+        
         // Add CSRF token if you're using Flask-WTF
         const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
         
@@ -617,32 +725,29 @@
         if (csrfToken) {
             headers['X-CSRFToken'] = csrfToken;
         }
-
+        
         fetch('/save-report', {
             method: 'POST',
             headers: headers,
-            credentials: 'same-origin', // Important for sending cookies
+            credentials: 'same-origin',
             body: JSON.stringify(reportData)
         })
         .then(response => {
-            // Log the raw response for debugging
             console.log('Response status:', response.status);
             return response.json();
         })
         .then(data => {
             if (data.success) {
                 console.log('Report saved successfully');
-                // Optional: Show a success toast or notification
-                alert('Report saved successfully!');
+                showToast("Report saved to your account successfully!");
             } else {
                 console.error('Failed to save report:', data.message);
-                // Optional: Show an error toast or notification
-                alert('Failed to save report: ' + data.message);
+                showToast(`Failed to save report: ${data.message}`, "error");
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while saving the report');
+            showToast("An error occurred while saving the report", "error");
         });
     }
 });

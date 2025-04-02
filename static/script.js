@@ -24,11 +24,20 @@ $(document).ready(function () {
             errorMessage.text(""); // Clear the error message
         }
 
+        // Get CSRF token from meta tag
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
         // Proceed to send the request if validation passes
         $.ajax({
             url: "/predict",
             type: "POST",
-            data: { symptoms: symptoms },
+            data: { 
+                symptoms: symptoms,
+                csrf_token: csrfToken  // Include CSRF token in data
+            },
+            headers: {
+                'X-CSRFToken': csrfToken  // Also send as header
+            },
             success: function (response) {
                 if (response.error) {
                     alert(response.error); // Show error from server
@@ -57,7 +66,7 @@ $(document).ready(function () {
                         fetchDetails(disease, "description");
                     });
                     $("#precaution-btn").click(function () {
-                        fetchDetails(disease, "precautions_df");
+                        fetchDetails(disease, "precautions");
                     });
                     $("#diets-btn").click(function () {
                         fetchDetails(disease, "diets");
@@ -67,8 +76,9 @@ $(document).ready(function () {
                     });
                 }
             },
-            error: function () {
-                alert("An error occurred. Please try again.");
+            error: function (xhr, status, error) {
+                console.error("Error:", xhr.responseText);
+                alert("An error occurred. Please try again. Error: " + xhr.responseText);
             }
         });
     });
@@ -85,11 +95,29 @@ $(document).ready(function () {
                     const modalId =
                         type === "medication" ? "#medicationModal" :
                         type === "description" ? "#descriptionModal" :
-                        type === "precautions_df" ? "#precautionModal" :
+                        type === "precautions" ? "#precautionModal" :
                         type === "diets" ? "#dietsModal" :
                         "#workoutModal";
-
-                    $(modalId).find(".modal-body p").text(info);
+                    
+                    // Special handling for precautions which is now an array
+                    if (type === "precautions" && Array.isArray(info)) {
+                        const modalBody = $(modalId).find(".modal-body");
+                        modalBody.empty(); // Clear previous content
+                        
+                        // Create a list for precautions
+                        const precautionsList = $('<ul class="list-group"></ul>');
+                        
+                        // Add each precaution as a list item
+                        info.forEach(precaution => {
+                            precautionsList.append(`<li class="list-group-item">${precaution}</li>`);
+                        });
+                        
+                        modalBody.append(precautionsList);
+                    } else {
+                        // Handle other types as before
+                        $(modalId).find(".modal-body").html(`<p>${info}</p>`);
+                    }
+                    
                     $(modalId).modal("show");
                 }
             },
@@ -99,6 +127,50 @@ $(document).ready(function () {
         });
     }
 });
+    function fetchDetails(disease, type) {
+        $.ajax({
+            url: `/details/${disease}`,
+            type: "GET",
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    const info = response[type];
+                    const modalId =
+                        type === "medication" ? "#medicationModal" :
+                        type === "description" ? "#descriptionModal" :
+                        type === "precautions" ? "#precautionModal" :
+                        type === "diets" ? "#dietsModal" :
+                        "#workoutModal";
+                    
+                    // Special handling for precautions which is now an array
+                    if (type === "precautions" && Array.isArray(info)) {
+                        const modalBody = $(modalId).find(".modal-body");
+                        modalBody.empty(); // Clear previous content
+                        
+                        // Create a list for precautions
+                        const precautionsList = $('<ul class="list-group"></ul>');
+                        
+                        // Add each precaution as a list item
+                        info.forEach(precaution => {
+                            precautionsList.append(`<li class="list-group-item">${precaution}</li>`);
+                        });
+                        
+                        modalBody.append(precautionsList);
+                    } else {
+                        // Handle other types as before
+                        $(modalId).find(".modal-body").html(`<p>${info}</p>`);
+                    }
+                    
+                    $(modalId).modal("show");
+                }
+            },
+            error: function () {
+                alert("Failed to fetch details. Please try again.");
+            }
+        });
+    }
+
 // Wait for the page to fully load
 document.addEventListener("DOMContentLoaded", function() {
     // Select all flash messages
@@ -114,6 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 // Handle "Take Action" button click
+// Update this part in your $("#sendResultsBtn").click() function
 $("#sendResultsBtn").click(function() {
     const predictedDisease = $("#resultText").text().replace("Predicted Disease: ", "");
     
@@ -123,6 +196,9 @@ $("#sendResultsBtn").click(function() {
     // Set the disease name
     $("#disease-result").text(`Disease: ${predictedDisease}`);
     
+    // Show spinner while loading
+    $("#spinner-overlay").removeClass("d-none");
+    
     // Fetch all details at once
     $.ajax({
         url: `/details/${predictedDisease}`,
@@ -130,13 +206,28 @@ $("#sendResultsBtn").click(function() {
         success: function(response) {
             if (response.error) {
                 alert(response.error);
+                $("#spinner-overlay").addClass("d-none");
             } else {
                 // Populate the results in the accordion
                 $("#description-result").text(response.description);
                 $("#medication-result").text(response.medication);
-                $("#precaution-result").text(response.precautions_df);
+                
+                // Special handling for precautions which is now an array
+                if (Array.isArray(response.precautions)) {
+                    const precautionsList = $('<ul class="list-group"></ul>');
+                    response.precautions.forEach(precaution => {
+                        precautionsList.append(`<li class="list-group-item">${precaution}</li>`);
+                    });
+                    $("#precaution-result").empty().append(precautionsList);
+                } else {
+                    $("#precaution-result").text(response.precautions || "No precautions available.");
+                }
+                
                 $("#diet-result").text(response.diets);
                 $("#workout-result").text(response.workout_df);
+                
+                // Hide spinner after loading
+                $("#spinner-overlay").addClass("d-none");
                 
                 // Get the user's email from the server
                 $.ajax({
@@ -158,6 +249,7 @@ $("#sendResultsBtn").click(function() {
             }
         },
         error: function() {
+            $("#spinner-overlay").addClass("d-none");
             alert("Failed to fetch details. Please try again.");
         }
     });

@@ -8,14 +8,14 @@ class UserReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     disease = db.Column(db.String(100), nullable=False)
-    symptoms = db.Column(db.String(500), nullable=True) 
+    symptoms = db.Column(db.String(500), nullable=True)
     description = db.Column(db.Text)
     medication = db.Column(db.Text)
     precaution = db.Column(db.Text)
     diet = db.Column(db.Text)
     workout = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-   
+    is_active = db.Column(db.Boolean, default=True)  # Add this if missing
     
     user = db.relationship('User', backref='reports')
 

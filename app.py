@@ -22,10 +22,18 @@ import traceback
 from sqlalchemy import func
 from werkzeug.utils import secure_filename
 import os
+from flask_wtf.csrf import CSRFProtect
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from flask import make_response, jsonify
 
 #defining app
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+csrf = CSRFProtect(app)
 
 # Configure the SQLite database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -122,7 +130,7 @@ def dashboard():
 def logout():
     session.clear()
     flash("Logged out successfully!.", "success")
-    return redirect(url_for('login'))
+    return redirect(url_for('welcome'))
 
 # Load the trained model and required files
 try:
@@ -211,14 +219,23 @@ def get_disease_details(disease):
         # Get the first match or return default messages
         medication_info = medication["Medication"].iloc[0] if not medication.empty else "No medication information available."
         description_info = description["Description"].iloc[0] if not description.empty else "No description available."
-        precautions_df_info = precautions_df["Precaution_1"].iloc[0] if not precautions_df.empty else "No description available."
+        precautions_list = []
+        if not precautions_df.empty:
+            for i in range(1, 5):  # For columns Precaution_1 through Precaution_4
+                precaution_key = f"Precaution_{i}"
+                if precaution_key in precautions_df.columns and not pd.isna(precautions_df[precaution_key].iloc[0]):
+                    precautions_list.append(precautions_df[precaution_key].iloc[0])
+        
+        # If no precautions were found, add a default message
+        if not precautions_list:
+            precautions_list = ["No precautions available."]
         diets_info = diets["Diet"].iloc[0] if not diets.empty else "No Diets available."
         workout_df_info = workout_df["workout"].iloc[0] if not workout_df.empty else "No Workout available."
 
         return jsonify({
             "medication": medication_info,
             "description": description_info,
-            "precautions_df": precautions_df_info,
+            "precautions": precautions_list, 
             "diets": diets_info,
             "workout_df": workout_df_info,
         })
@@ -563,6 +580,222 @@ def view_user(user_id):
     user = User.query.get_or_404(user_id)
     return render_template('view_user.html', user=user)
 
+# Admin report management functionality
+# Add these routes to your app.py
+# Report data endpoint for DataTables
+@app.route('/admin/reports/data')
+@login_required
+def get_report_data():
+    if not current_user.is_admin():
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Get all reports with user information
+        reports = db.session.query(
+            UserReport,
+            User.username,
+            User.email
+        ).join(
+            User, UserReport.user_id == User.id
+        ).order_by(
+            UserReport.created_at.desc()
+        ).all()
+
+        # Prepare the data for DataTables
+        report_data = []
+        for report, username, email in reports:
+            report_data.append({
+                'id': report.id,
+                'user_id': report.user_id,
+                'user_name': username,
+                'user_email': email,
+                'disease': report.disease,
+                'symptoms': report.symptoms,
+                'created_at': report.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'description': report.description,
+                'medication': report.medication,
+                'precaution': report.precaution,
+                'diet': report.diet,
+                'workout': report.workout
+            })
+
+        # Get statistics
+        total_users = User.query.count()
+        active_users = User.query.filter_by(is_active=True).count()
+        total_reports = UserReport.query.count()
+
+        return jsonify({
+            'reports': report_data,
+            'stats': {
+                'total_users': total_users,
+                'active_users': active_users,
+                'total_reports': total_reports
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"Error fetching report data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Single report details endpoint
+@app.route('/admin/reports/<int:report_id>')
+@login_required
+def get_report_details(report_id):
+    if not current_user.is_admin():
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        report = db.session.query(
+            UserReport,
+            User.username,
+            User.email
+        ).join(
+            User, UserReport.user_id == User.id
+        ).filter(
+            UserReport.id == report_id
+        ).first()
+
+        if not report:
+            return jsonify({'error': 'Report not found'}), 404
+
+        report_obj, username, email = report
+
+        return jsonify({
+            'id': report_obj.id,
+            'user_id': report_obj.user_id,
+            'user_name': username,
+            'user_email': email,
+            'disease': report_obj.disease,
+            'symptoms': report_obj.symptoms,
+            'created_at': report_obj.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'description': report_obj.description,
+            'medication': report_obj.medication,
+            'precaution': report_obj.precaution,
+            'diet': report_obj.diet,
+            'workout': report_obj.workout,
+            'confidence': None  # You can add this field if you have confidence scores
+        })
+    except Exception as e:
+        app.logger.error(f"Error fetching report details: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Delete single report endpoint
+@app.route('/admin/reports/<int:report_id>', methods=['DELETE'])
+@login_required
+def delete_single_report(report_id):
+    if not current_user.is_admin():
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        report = UserReport.query.get_or_404(report_id)
+        db.session.delete(report)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Report deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting report: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Bulk delete reports endpoint
+@app.route('/admin/reports/bulk-delete', methods=['DELETE'])
+@login_required
+def bulk_delete_reports():
+    if not current_user.is_admin():
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        data = request.get_json()
+        report_ids = data.get('report_ids', [])
+        
+        if not report_ids:
+            return jsonify({'error': 'No report IDs provided'}), 400
+
+        # Delete all reports with the given IDs
+        UserReport.query.filter(UserReport.id.in_(report_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted {len(report_ids)} reports'
+        })
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error in bulk delete: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Export report endpoint (PDF)
+
+@app.route('/admin/reports/<int:report_id>/export')
+@login_required
+def export_report(report_id):
+    if not current_user.is_admin():
+        return jsonify({'error': 'Unauthorized'}), 403
+    try:
+        # In a real implementation, you would generate a PDF here
+        # For now, we'll just return the report data as JSON
+        report = db.session.query(
+            UserReport,
+            User.username,
+            User.email
+        ).join(
+            User, UserReport.user_id == User.id
+        ).filter(
+            UserReport.id == report_id
+        ).first()
+
+        if not report:
+         return jsonify({'error': 'Report not found'}), 404
+ 
+        report_obj, username, email = report
+    
+    
+
+        # Create PDF buffer
+        buffer = BytesIO()
+        
+        # Create PDF document
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Add content
+        story.append(Paragraph("Medical Diagnosis Report", styles['Title']))
+        story.append(Spacer(1, 12))
+        
+        # Patient Info
+        story.append(Paragraph("Patient Information", styles['Heading2']))
+        story.append(Paragraph(f"Name: {username}", styles['Normal']))
+        story.append(Paragraph(f"Email: {email}", styles['Normal']))
+        story.append(Spacer(1, 12))
+        
+        # Diagnosis
+        story.append(Paragraph("Diagnosis", styles['Heading2']))
+        story.append(Paragraph(f"Condition: {report_obj.disease}", styles['Normal']))
+        story.append(Paragraph(f"Symptoms: {report_obj.symptoms}", styles['Normal']))
+        story.append(Paragraph(f"Description: {report_obj.description}", styles['Normal']))
+        story.append(Paragraph(f"Medication: {report_obj.medication}", styles['Normal']))
+        story.append(Paragraph(f"Precaution: {report_obj.precaution}", styles['Normal']))
+        story.append(Paragraph(f"Diet: {report_obj.diet}", styles['Normal']))
+        story.append(Paragraph(f"Exercise: {report_obj.workout}", styles['Normal']))
+        story.append(Spacer(1, 12))
+        
+        # Add more sections as needed...
+        
+        # Build PDF
+        doc.build(story)
+        
+        # Get PDF content
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        # Create response
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=medical_report_{report_id}.pdf'
+        return response
+
+    except Exception as e:
+        app.logger.error(f"Error exporting report: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 
 
